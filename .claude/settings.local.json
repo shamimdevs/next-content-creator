@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm show:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e \"const z = require\\('zod'\\); const r = z.object\\({x: z.string\\(\\)}\\).safeParse\\({}\\); console.log\\(Object.keys\\(r.error\\)\\)\")",
+      "Bash(node -e \"const z = require\\('zod'\\); const r = z.object\\({x: z.string\\(\\)}\\).safeParse\\({}\\); console.log\\(JSON.stringify\\(r.error\\)\\)\")",
+      "Bash(npm run:*)"
+    ]
+  }
+}
