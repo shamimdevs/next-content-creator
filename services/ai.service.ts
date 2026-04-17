@@ -53,7 +53,7 @@ export async function generateMetadata(
     await deductCredit(userId);
   }
 
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const systemPrompt = `You are an expert YouTube SEO specialist. Given a video topic or script excerpt, generate:
 1. An engaging, click-worthy video title (max 70 characters)

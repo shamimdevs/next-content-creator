@@ -1,33 +1,31 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { generateMetadata } from "@/services/ai.service";
-import { generateAndUploadThumbnail } from "@/services/image.service";
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import type { ActionResult, GenerationPayload } from "@/types";
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { generateMetadata } from '@/services/ai.service';
+import { generateAndUploadThumbnail } from '@/services/image.service';
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import type { ActionResult, GenerationPayload } from '@/types';
 
 const GenerateSchema = z.object({
   prompt: z
     .string()
-    .min(10, "Prompt must be at least 10 characters")
-    .max(1000, "Prompt must be under 1000 characters"),
+    .min(10, 'Prompt must be at least 10 characters')
+    .max(1000, 'Prompt must be under 1000 characters'),
 });
 
-export async function generateContent(
-  input: unknown,
-): Promise<ActionResult<GenerationPayload>> {
+export async function generateContent(input: unknown): Promise<ActionResult<GenerationPayload>> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized. Please sign in." };
+      return { success: false, error: 'Unauthorized. Please sign in.' };
     }
     const userId = session.user.id;
 
     const parsed = GenerateSchema.safeParse(input);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' };
     }
     const { prompt } = parsed.data;
 
@@ -37,6 +35,8 @@ export async function generateContent(
       generateMetadata(userId, prompt),
       generateAndUploadThumbnail(prompt, userId),
     ]);
+    console.log(metadata, 'metadata');
+    console.log(imageUrl, 'imageUrl');
 
     const generation = await prisma.generation.create({
       data: {
@@ -49,7 +49,7 @@ export async function generateContent(
       },
     });
 
-    revalidatePath("/dashboard/history");
+    revalidatePath('/dashboard/history');
 
     return {
       success: true,
@@ -64,41 +64,49 @@ export async function generateContent(
       },
     };
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "An unexpected error occurred";
+    console.error('Generation error:', err);
+    const message = err instanceof Error ? err.message : 'An unexpected error occurred';
     return { success: false, error: message };
   }
 }
 
-export async function getGenerationHistory(): Promise<
-  ActionResult<GenerationPayload[]>
-> {
+export async function getGenerationHistory(): Promise<ActionResult<GenerationPayload[]>> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: 'Unauthorized' };
     }
 
     const generations = await prisma.generation.findMany({
       where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 50,
     });
 
     return {
       success: true,
-      data: generations.map((g: { id: string; videoTitle: string; description: string; tags: string[]; imageUrl: string; prompt: string; createdAt: Date }) => ({
-        id: g.id,
-        videoTitle: g.videoTitle,
-        description: g.description,
-        tags: g.tags,
-        imageUrl: g.imageUrl,
-        prompt: g.prompt,
-        createdAt: g.createdAt,
-      })),
+      data: generations.map(
+        (g: {
+          id: string;
+          videoTitle: string;
+          description: string;
+          tags: string[];
+          imageUrl: string;
+          prompt: string;
+          createdAt: Date;
+        }) => ({
+          id: g.id,
+          videoTitle: g.videoTitle,
+          description: g.description,
+          tags: g.tags,
+          imageUrl: g.imageUrl,
+          prompt: g.prompt,
+          createdAt: g.createdAt,
+        }),
+      ),
     };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to load history";
+    const message = err instanceof Error ? err.message : 'Failed to load history';
     return { success: false, error: message };
   }
 }

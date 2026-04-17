@@ -18,8 +18,10 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for an Auth.js session cookie (either JWT or database session)
+  // Check for an Auth.js v5 session cookie (v5 uses "authjs." prefix; v4 used "next-auth.")
   const sessionCookie =
+    req.cookies.get("authjs.session-token") ??
+    req.cookies.get("__Secure-authjs.session-token") ??
     req.cookies.get("next-auth.session-token") ??
     req.cookies.get("__Secure-next-auth.session-token");
 

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useTransition } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { generateContent } from "@/actions/generate.action";
-import type { GenerationPayload } from "@/types";
+import { useState, useTransition } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { generateContent } from '@/actions/generate.action';
+import type { GenerationPayload } from '@/types';
 
 interface GenerationFormProps {
   onResult: (result: GenerationPayload) => void;
@@ -14,20 +14,24 @@ interface GenerationFormProps {
 }
 
 export function GenerationForm({ onResult, onError }: GenerationFormProps) {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState('');
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     startTransition(async () => {
-      const result = await generateContent({ prompt });
-
-      if (result.success) {
-        onResult(result.data);
-        setPrompt("");
-      } else {
-        onError(result.error);
+      try {
+        const result = await generateContent({ prompt });
+        if (result.success) {
+          onResult(result.data);
+          setPrompt('');
+        } else {
+          onError(result.error);
+        }
+      } catch (err) {
+        console.error('Generation error:', err);
+        onError('An unexpected error occurred. Please try again.');
       }
     });
   }
@@ -35,9 +39,7 @@ export function GenerationForm({ onResult, onError }: GenerationFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="prompt">
-          Video Topic or Script Excerpt
-        </Label>
+        <Label htmlFor="prompt">Video Topic or Script Excerpt</Label>
         <Textarea
           id="prompt"
           placeholder="e.g. 'Top 10 productivity tools for developers in 2025 — showing VSCode extensions, terminal tips, and AI assistants...'"
@@ -47,9 +49,7 @@ export function GenerationForm({ onResult, onError }: GenerationFormProps) {
           disabled={isPending}
           maxLength={1000}
         />
-        <p className="text-xs text-zinc-500 text-right">
-          {prompt.length}/1000
-        </p>
+        <p className="text-xs text-zinc-500 text-right">{prompt.length}/1000</p>
       </div>
 
       <Button
